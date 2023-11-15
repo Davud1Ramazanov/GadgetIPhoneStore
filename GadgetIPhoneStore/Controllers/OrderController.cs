@@ -84,9 +84,16 @@ namespace GadgetIPhoneStore.Controllers
             var orders = await _localController.Select();
             if (orders != null && orders.Any())
             {
-                var order = orders.FirstOrDefault();
-                var product = _productController.Select().Result.FirstOrDefault(x => x.ProductId == order.ProductId);
-                return Ok(new { OrderId = order.OrderId, ProductName = product.Name, Buyer = order.Buyer, Quantity = order.Quantity, Total = order.Total, DateOrder = order.DateOrder });
+                var result = new List<object>();
+                foreach (var order in orders)
+                {
+                    var product = _productController.Select().Result.FirstOrDefault(x => x.ProductId == order.ProductId);
+                    if (product != null)
+                    {
+                        result.Add(new { OrderId = order.OrderId, ProductId = order.ProductId, ProductName = product.Name, Image = product.Image, Buyer = order.Buyer, Quantity = order.Quantity, Total = order.Total, DateOrder = order.DateOrder });
+                    }
+                }
+                return Ok(result);
             }
             else
             {

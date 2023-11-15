@@ -44,7 +44,7 @@ namespace GadgetIPhoneStore.LocalControllers
         public Task<List<Product>> Update(Product t)
         {
             var item = _dbContextClass.Products.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
-            if (item == null)
+            if (item != null)
             {
                 item.CategoryId = t.CategoryId;
                 item.Name = t.Name;
@@ -75,6 +75,16 @@ namespace GadgetIPhoneStore.LocalControllers
             if (productId > 0)
             {
                 products = products.Where(x => x.ProductId == productId).ToList();
+            }
+            return products;
+        }
+
+        public async Task<List<Product>> FindByCategoryAndProductName(int categoryId, string name)
+        {
+            List<Product> products = await _dbContextClass.Products.ToListAsync();
+            if (categoryId > 0 && !string.IsNullOrEmpty(name.ToLower()))
+            {
+                products = products.Where(x => x.CategoryId == categoryId && x.Name.ToLower().Contains(name.ToLower())).ToList();
             }
             return products;
         }

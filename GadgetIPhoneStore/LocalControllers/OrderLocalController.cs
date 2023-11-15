@@ -2,19 +2,26 @@
 using GadgetIPhoneStore.Context;
 using GadgetIPhoneStore.Models;
 using GadgetIPhoneStore.Roles;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace GadgetIPhoneStore.LocalControllers
 {
     public class OrderLocalController : IOrderController
     {
         protected readonly DbContextClass _dbContextClass;
-        protected readonly IProductController _productController;
+        protected readonly IHttpContextAccessor _httpContextAccessor;
 
-        public OrderLocalController(DbContextClass dbContextClass, IProductController productController)
+        public OrderLocalController(DbContextClass dbContextClass, IHttpContextAccessor httpContextAccessor)
         {
             _dbContextClass = dbContextClass;
-            _productController = productController;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        public string GetName()
+        {
+            return _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Name)).Value;
         }
 
         public Task<List<Order>> Add(Order t)
@@ -27,7 +34,7 @@ namespace GadgetIPhoneStore.LocalControllers
             }
             else
             {
-                _dbContextClass.Orders.Add(t);
+                _dbContextClass.Orders.Add(new Order { ProductId = t.ProductId, Buyer = GetName(), Quantity = t.Quantity, Total = t.Total, DateOrder = t.DateOrder });
                 _dbContextClass.SaveChanges();
             }
             return _dbContextClass.Orders.ToListAsync();
@@ -46,15 +53,15 @@ namespace GadgetIPhoneStore.LocalControllers
 
         public Task<List<Order>> Select()
         {
-            return _dbContextClass.Orders.ToListAsync();
+            return _dbContextClass.Orders.Where(x => x.Buyer.Equals(GetName())).ToListAsync();
         }
 
         public Task<List<Order>> Update(Order t)
         {
             var item = _dbContextClass.Orders.FirstOrDefault(x => x.OrderId.Equals(t.OrderId));
-            if (item == null)
+            if (item != null)
             {
-                item.Buyer = t.Buyer;
+                item.Buyer = GetName();
                 item.ProductId = t.ProductId;
                 item.Total = t.Total;
                 _dbContextClass.SaveChanges();

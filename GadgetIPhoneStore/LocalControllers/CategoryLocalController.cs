@@ -47,6 +47,7 @@ namespace GadgetIPhoneStore.LocalControllers
             if (item != null)
             {
                 item.Name = t.Name;
+                item.Image = t.Image;
                 _dbContextClass.SaveChanges();
             }
             return _dbContextClass.Categories.ToListAsync();

@@ -88,6 +88,17 @@ namespace GadgetIPhoneStore.Controllers
         }
 
         [HttpGet]
+        [Route("FindByCategoryAndProductName")]
+        public async Task<IActionResult> FindByCategoryAndProductName(int categoryId, string name)
+        {
+            var result = await _localController.FindByCategoryAndProductName(categoryId, name);
+            {
+                return Ok(result);
+            }
+            return BadRequest();
+        }
+
+        [HttpGet]
         [Route("FindByProductName")]
         public async Task<IActionResult> FindByProductName(string name)
         {

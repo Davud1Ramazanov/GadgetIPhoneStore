@@ -26,14 +26,18 @@ namespace GadgetIPhoneStore.LocalControllers
 
         public Task<List<Order>> Add(Order t)
         {
-            var item = _dbContextClass.Orders.FirstOrDefault(x => x.Buyer.Equals(t.Buyer));
-            if (item != null)
+            var item = _dbContextClass.Orders.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
+            var productItem = _dbContextClass.Products.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
+            if (item != null && productItem != null)
             {
                 item.Quantity += t.Quantity;
                 item.DateOrder = DateTime.Now;
+                productItem.Quantity -= t.Quantity;
+                _dbContextClass.SaveChanges();
             }
             else
             {
+                productItem.Quantity -= t.Quantity;
                 _dbContextClass.Orders.Add(new Order { ProductId = t.ProductId, Buyer = GetName(), Quantity = t.Quantity, Total = t.Total, DateOrder = t.DateOrder });
                 _dbContextClass.SaveChanges();
             }
@@ -43,8 +47,10 @@ namespace GadgetIPhoneStore.LocalControllers
         public Task<List<Order>> Delete(Order t)
         {
             var item = _dbContextClass.Orders.FirstOrDefault(x => x.OrderId.Equals(t.OrderId));
+            var productItem = _dbContextClass.Products.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
             if (item != null)
             {
+                productItem.Quantity += t.Quantity;
                 _dbContextClass.Orders.Remove(item);
                 _dbContextClass.SaveChanges();
             }
@@ -59,11 +65,16 @@ namespace GadgetIPhoneStore.LocalControllers
         public Task<List<Order>> Update(Order t)
         {
             var item = _dbContextClass.Orders.FirstOrDefault(x => x.OrderId.Equals(t.OrderId));
+            var productItem = _dbContextClass.Products.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
             if (item != null)
             {
+                var oldQuantity = item.Quantity;
                 item.Buyer = GetName();
                 item.ProductId = t.ProductId;
                 item.Total = t.Total;
+                item.Quantity = t.Quantity;
+                item.DateOrder = t.DateOrder;
+                productItem.Quantity += oldQuantity - t.Quantity;
                 _dbContextClass.SaveChanges();
             }
             return _dbContextClass.Orders.ToListAsync();

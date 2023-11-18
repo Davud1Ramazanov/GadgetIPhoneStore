@@ -90,7 +90,7 @@ namespace GadgetIPhoneStore.Controllers
                     var product = _productController.Select().Result.FirstOrDefault(x => x.ProductId == order.ProductId);
                     if (product != null)
                     {
-                        result.Add(new { OrderId = order.OrderId, ProductId = order.ProductId, ProductName = product.Name, Image = product.Image, Buyer = order.Buyer, Quantity = order.Quantity, Total = order.Total, DateOrder = order.DateOrder });
+                        result.Add(new { OrderId = order.OrderId, ProductId = order.ProductId, ProductName = product.Name, ProductQuantity = product.Quantity, Image = product.Image, Buyer = order.Buyer, Quantity = order.Quantity, Total = order.Total, DateOrder = order.DateOrder });
                     }
                 }
                 return Ok(result);

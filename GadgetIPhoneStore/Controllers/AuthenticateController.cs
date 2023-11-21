@@ -74,36 +74,6 @@ namespace GadgetIPhoneStore.Controllers
             return Ok("User added!");
         }
 
-        [HttpPost]
-        [Route("regAdmin")]
-        public async Task<IActionResult> RegAdmin([FromBody] Register model)
-        {
-            var userEx = await _userManager.FindByNameAsync(model.UserName);
-            if (userEx != null) return StatusCode(StatusCodes.Status500InternalServerError, "Admin in db already");
-
-            IdentityUser user = new()
-            {
-                UserName = model.UserName,
-                Email = model.Email,
-                SecurityStamp = Guid.NewGuid().ToString()
-            };
-
-            var res = await _userManager.CreateAsync(user, model.Password);
-            if (!res.Succeeded) { return StatusCode(StatusCodes.Status500InternalServerError, "Creation failed!"); }
-
-            if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
-                await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-            if (!await _roleManager.RoleExistsAsync(UserRoles.User))
-                await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
-
-            if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
-                await _userManager.AddToRoleAsync(user, UserRoles.Admin);
-            if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
-                await _userManager.AddToRoleAsync(user, UserRoles.User);
-
-            return Ok("Admin added!");
-        }
-
         private JwtSecurityToken GetToken(List<Claim> claimsList)
         {
             var signKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));

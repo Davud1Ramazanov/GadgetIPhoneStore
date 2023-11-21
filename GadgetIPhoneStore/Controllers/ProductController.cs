@@ -10,9 +10,12 @@ namespace GadgetIPhoneStore.Controllers
     public class ProductController : ControllerBase
     {
         protected readonly IProductController _localController;
-        public ProductController(IProductController productLocal)
+        protected readonly ICategoryController _categoryController;
+        public ProductController(IProductController productLocal, ICategoryController categoryController)
         {
             _localController = productLocal;
+            _categoryController = categoryController;
+
         }
 
         [HttpPost]
@@ -108,6 +111,27 @@ namespace GadgetIPhoneStore.Controllers
                 return Ok(result);
             }
             return BadRequest();
+        }
+
+        [HttpGet]
+        [Route("SelectProductByCategory")]
+        public async Task<IActionResult> SelectProductByCategory()
+        {
+            var products = await _localController.Select();
+            if (products != null)
+            {
+                var result = new List<object>();
+                foreach (var product in products)
+                {
+                    var category = _categoryController.Select().Result.FirstOrDefault(x => x.CategoryId.Equals(product.CategoryId));
+                    if(category != null)
+                    {
+                        result.Add(new { ProductId = product.ProductId, CategoryName = category.Name, CategoryId = category.CategoryId, Image = product.Image, Name = product.Name, Color = product.Color, Pixel = product.Pixel, Description = product.Description, Quantity = product.Quantity, Price = product.Price });
+                    }
+                }
+                return Ok(result);
+            }
+            return NotFound();
         }
     }
 }

@@ -57,9 +57,26 @@ namespace GadgetIPhoneStore.LocalControllers
             return _dbContextClass.Orders.ToListAsync();
         }
 
+        public Task<List<Order>> DeleteByProduct(Order t)
+        {
+            var item = _dbContextClass.Orders.FirstOrDefault(x => x.OrderId.Equals(t.OrderId));
+            var productItem = _dbContextClass.Products.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
+            if (item != null)
+            {
+                _dbContextClass.Orders.Remove(item);
+                _dbContextClass.SaveChanges();
+            }
+            return _dbContextClass.Orders.ToListAsync();
+        }
+
         public Task<List<Order>> Select()
         {
             return _dbContextClass.Orders.Where(x => x.Buyer.Equals(GetName())).ToListAsync();
+        }
+
+        public Task<List<Order>> SelectAllOrders()
+        {
+            return _dbContextClass.Orders.ToListAsync();
         }
 
         public Task<List<Order>> Update(Order t)

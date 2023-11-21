@@ -53,6 +53,18 @@ namespace GadgetIPhoneStore.Controllers
             return BadRequest();
         }
 
+        [HttpPost]
+        [Route("RemoveByProduct")]
+        public async Task<IActionResult> RemoveByProduct(Order t)
+        {
+            var result = await _localController.DeleteByProduct(t);
+            if (result != null)
+            {
+                return Ok(result);
+            }
+            return BadRequest();
+        }
+
         [HttpGet]
         [Route("Select")]
         public async Task<IActionResult> Select()
@@ -63,6 +75,30 @@ namespace GadgetIPhoneStore.Controllers
                 return Ok(result);
             }
             return BadRequest();
+        }
+
+        [HttpGet]
+        [Route("SelectAllOrders")]
+        public async Task<IActionResult> SelectAllOrders()
+        {
+            var orders = await _localController.SelectAllOrders();
+            if (orders != null && orders.Any())
+            {
+                var result = new List<object>();
+                foreach (var order in orders)
+                {
+                    var product = _productController.Select().Result.FirstOrDefault(x => x.ProductId.Equals(order.ProductId));
+                    if (product != null)
+                    {
+                        result.Add(new { OrderId = order.OrderId, ProductId = order.ProductId, ProductName = product.Name, ProductQuantity = product.Quantity, Image = product.Image, Buyer = order.Buyer, Quantity = order.Quantity, Total = order.Total, DateOrder = order.DateOrder });
+                    }
+                }
+                return Ok(result);
+            }
+            else
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet]
@@ -87,7 +123,7 @@ namespace GadgetIPhoneStore.Controllers
                 var result = new List<object>();
                 foreach (var order in orders)
                 {
-                    var product = _productController.Select().Result.FirstOrDefault(x => x.ProductId == order.ProductId);
+                    var product = _productController.Select().Result.FirstOrDefault(x => x.ProductId.Equals(order.ProductId));
                     if (product != null)
                     {
                         result.Add(new { OrderId = order.OrderId, ProductId = order.ProductId, ProductName = product.Name, ProductQuantity = product.Quantity, Image = product.Image, Buyer = order.Buyer, Quantity = order.Quantity, Total = order.Total, DateOrder = order.DateOrder });

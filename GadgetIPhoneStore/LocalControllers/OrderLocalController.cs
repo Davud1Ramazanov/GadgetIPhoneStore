@@ -27,20 +27,26 @@ namespace GadgetIPhoneStore.LocalControllers
         public Task<List<Order>> Add(Order t)
         {
             var item = _dbContextClass.Orders.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
+            var userName = GetName();
             var productItem = _dbContextClass.Products.FirstOrDefault(x => x.ProductId.Equals(t.ProductId));
-            if (item != null && productItem != null)
+            if(productItem == null)
+            {
+                throw new Exception("Product not found");
+            }
+
+            if (item != null && userName.Equals(item.Buyer))
             {
                 item.Quantity += t.Quantity;
                 item.DateOrder = DateTime.Now;
                 productItem.Quantity -= t.Quantity;
-                _dbContextClass.SaveChanges();
             }
+
             else
             {
                 productItem.Quantity -= t.Quantity;
                 _dbContextClass.Orders.Add(new Order { ProductId = t.ProductId, Buyer = GetName(), Quantity = t.Quantity, Total = t.Total, DateOrder = t.DateOrder });
-                _dbContextClass.SaveChanges();
             }
+            _dbContextClass.SaveChanges();
             return _dbContextClass.Orders.ToListAsync();
         }
 

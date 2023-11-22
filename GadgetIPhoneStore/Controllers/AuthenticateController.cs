@@ -10,17 +10,15 @@ using System.Text;
 namespace GadgetIPhoneStore.Controllers
 {
     [ApiController]
-    [Route("/api/[controller]/")]
+    [Route("api/[controller]")]
     public class AuthenticateController : ControllerBase
     {
         private readonly IConfiguration _configuration;
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public AuthenticateController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        public AuthenticateController(UserManager<IdentityUser> userManager, IConfiguration configuration)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
             _configuration = configuration;
         }
 

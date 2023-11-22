@@ -4,27 +4,28 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
+using System.Security.Claims;
 
 namespace GadgetIPhoneStore.Controllers
 {
     [ApiController, Authorize, Route("api/[controller]")]
-    public class AccountController : ControllerBase
+    public class UserController : ControllerBase
     {
         protected readonly IConfiguration _configuration;
         protected readonly RoleManager<IdentityRole> _roleManager;
         protected readonly UserManager<IdentityUser> _userManager;
+        protected readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AccountController(IConfiguration configuration, RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager)
+        public UserController(IConfiguration configuration, RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
             _roleManager = roleManager;
             _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost]
-        [Route("CreateAccount")]
+        [Route("Create")]
         public async Task<IActionResult> RegAdmin([FromBody] Register model)
         {
             var userEx = await _userManager.FindByNameAsync(model.UserName);
@@ -54,25 +55,24 @@ namespace GadgetIPhoneStore.Controllers
         }
 
         [HttpPost]
-        [Route("UpdateAccount")]
-        public async Task<IActionResult> UpdateAccount([FromQuery]string id, Register model)
+        [Route("Update")]
+        public async Task<IActionResult> UpdateAccount([FromQuery] string id, Register model)
         {
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null) 
+            var checkUserName = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Name)).Value;
+            if (user == null)
             {
                 return NotFound();
             }
-            
-            user.UserName = model.UserName;
 
-            using (SHA256 sHA256 = SHA256.Create())
+            if (checkUserName.Equals(user.UserName))
             {
-                byte[] hasedPassword = sHA256.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
-                user.PasswordHash = Convert.ToBase64String(hasedPassword);
+                return Forbid("You can't change your own account, you need another profile.");
             }
 
+            user.UserName = model.UserName;
             user.Email = model.Email;
-            
+
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
@@ -83,13 +83,19 @@ namespace GadgetIPhoneStore.Controllers
         }
 
         [HttpPost]
-        [Route("DeleteAccount")]
+        [Route("Delete")]
         public async Task<IActionResult> DeleteAccount(Register model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
+            var checkUserName = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Name)).Value;
             if (user == null)
             {
                 return NotFound();
+            }
+
+            if (checkUserName.Equals(user.UserName))
+            {
+                return Forbid("You can't change your own account, you need another profile.");
             }
 
             var result = await _userManager.DeleteAsync(user);
@@ -102,11 +108,11 @@ namespace GadgetIPhoneStore.Controllers
         }
 
         [HttpGet]
-        [Route("SelectAccounts")]
+        [Route("Select")]
         public async Task<IActionResult> SelectAccount()
         {
             var user = await _userManager.Users.ToListAsync();
-            
+
             if (user != null)
             {
                 return Ok(user);
